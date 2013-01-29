@@ -409,10 +409,10 @@ class CSRFSchema(colander.Schema):
       class MySchema(CSRFSchema):
           my_value = colander.SchemaNode(colander.String())
 
-      And in your application code, *bind* the schema, passing the request
-      as a keyword argument:
+    And in your application code, *bind* the schema, passing the request
+    as a keyword argument:
 
-      .. code-block:: python
+    .. code-block:: python
 
         def aview(request):
             schema = MySchema().bind(request=request)
@@ -526,8 +526,8 @@ def includeme(config):
     Currently, this hook will set up and register translation paths
     for Deform and Colander, add a static view for Deform resources (uses
     ``pyramid_deform.static_path`` from the Pyramid configuration if
-    specified else ``static-deform`` by default), and configures a
-    template search path (if one is specified by
+    specified, otherwise ``static-deform`` by default), and
+    configures one or more template search paths (if specified by
     ``pyramid_deform.template_search_path`` in your Pyramid
     configuration).
     """

@@ -37,16 +37,20 @@ To use this in your project, add ``pyramid_deform`` to the
 Configuring template search paths
 ---------------------------------
 
-pyramid_deform allows you to add template search paths in the
+``pyramid_deform`` allows you to add one or more template search paths in its
 configuration.  An example::
 
   [myapp:main]
   ...
   pyramid_deform.template_search_path = myapp:templates/deform
+                                        my.extra:templates/deform/default
+                                        ...
 
 Thus, if you put a ``form.pt`` into your application's
 ``templates/deform`` directory, that will override deform's default
-``form.pt``.
+``form.pt``. Similarly, if you put another ``form.pt`` into the 
+given directory within the ``my.extra`` package, then it will override
+the one in your application and the default from deform.
 
 FormView Usage
 --------------
@@ -175,19 +179,38 @@ subclass, like this::
             })
             return data
 
-Wizard
-------
-
-XXX
 
 CSRF Schema
 -----------
 
-::
+This schema can be used as a base class in order to protect forms from
+`Cross-Site Request Forgery (CSRF)
+<http://en.wikipedia.org/wiki/Cross-site_request_forgery>`_ attacks. In
+essence, a CSRF is an attack method in which a third party can instruct a
+user's browser to execute commands on a target application or site. This can
+happen if a user is logged in on your application in one window or tab, and a
+malicious third party site instructs the user's browser to submit a form or
+action.  Without protection, as the user is authenticated already (likely via
+cookie), the action will succeed.
+
+In order to protect against this, this package provides a Colander base
+schema :class:`pyramid_deform.CSRFSchema`.  Use the base schema like so to add a CSRF token field to your given schema::
 
     >>> class LoginSchema(CSRFSchema):
     >>>     pass
     >>> schema = LoginSchema.get_schema(self.request)
+
+When the schema is rendered as part of a :class:`deform.Form`, a CSRF token
+(generated using the current ``Pyramid`` ``request.session.get_csrf_token()``
+method) will be included, and this token must be received and verified in the
+resulting user form submission for the request to be valid.  Without the token,
+the request will fail.  As this token is tied to your current session on your
+Pyramid application, and generated per-user session, it is almost certain
+(short of packet sniffing or other data theft) that an attacker will not have
+this token. Thus CSRF attacks are prevented for forms using this schema.
+
+To prevent CSRF attacks across your application, all public-facing forms
+should use schemas incorporating this protection.
 
 
 SessionFileUploadTempStore
@@ -230,6 +253,13 @@ Note that the directory named by ``pyramid_deform.tempdir`` will accrue lots
 of garbage.  The tempstore doesn't clean up after itself.  You'll need to set
 up a cron job or equivalent to delete files older than a day or so from that
 directory.
+
+Wizard
+------
+
+This package provides a multi-step (multi-schema) form view in
+:class:`pyramid_deform.FormWizardView`. Further docuemntation is coming
+shortly.
 
 Reporting Bugs / Development Versions
 -------------------------------------
