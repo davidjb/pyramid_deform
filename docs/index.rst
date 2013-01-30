@@ -17,25 +17,53 @@ Topics
 Installation
 ------------
 
-Install using setuptools, e.g. (within a virtualenv)::
+Install using ``setuptools`` or ``pip``, e.g. (within a virtualenv)::
 
   $ easy_install pyramid_deform
 
-Configuring translations
-------------------------
+or::
 
-pyramid_deform provides an ``includeme`` hook that will set up translation
-paths so that the translations for deform and colander are registered.  It
-also adds a Pyramid static view for the deform JavaScript and CSS resources.
+  $ pip install pyramid_deform
+
+You can also include ``pyramid_deform`` as a ``setup_requires`` dependency
+in your ``setuptools``-compatible project.
+
+Once installed, continue with `Configuration`_ of this package.
+
+
+Configuration
+-------------
+
+Basic configuration
+^^^^^^^^^^^^^^^^^^^
+
+``pyramid_deform`` provides an ``includeme`` hook that will configure your
+``Pyramid`` environment accordingly.  It will:
+
+* Configure and register translations for Deform and Colander
+* Configure template search paths for Deform
+* Add a static view for the Deform JavaScript and CSS resources
+
 To use this in your project, add ``pyramid_deform`` to the
-``pyramid.includes`` in your PasteDeploy configuration file.  An example::
+``pyramid.includes`` in your PasteDeploy configuration file.  For example::
 
   [myapp:main]
   ...
   pyramid.includes = pyramid_debugtoolbar pyramid_tm pyramid_deform
 
+You may also use the ``include`` method against a Pyramid configurator
+(commonly seen as a `config` object) like so::
+
+    def main(global_config, **settings):
+        """ This function returns a Pyramid WSGI application.
+        """
+        config = Configurator(settings=settings)
+        config.include('pyramid_deform')
+        ...
+
+
 Configuring template search paths
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``pyramid_deform`` allows you to add one or more template search paths in its
 configuration.  An example::
@@ -51,6 +79,20 @@ Thus, if you put a ``form.pt`` into your application's
 ``form.pt``. Similarly, if you put another ``form.pt`` into the 
 given directory within the ``my.extra`` package, then it will override
 the one in your application and the default from deform.
+
+Configuring the static resource view
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once ``pyramid_deform`` has been included in some fashion in your application,
+it will register a add a static view for Deform resources. By default, this
+static view is configured via
+:meth:`pyramid.config.Configurator.add_static_view` with a ``name`` of
+``static-deform``.  You can customise this by setting the option
+``pyramid_deform.static_path`` within your Pyramid configuration.
+
+This option is to be a string representing an application-relative local URL
+prefix for these static resources. It may alternately be a full URL. 
+
 
 FormView Usage
 --------------
