@@ -90,40 +90,48 @@ class FormView(object):
         self.before(form)
         return form
 
-    def __call__(self):
-        """ 
+    def __call__(self, ignore_buttons=False):
+        """
         Prepares and renders the form according to provided options.
 
         Upon receiving a ``POST`` request, this method will validate
-        the request against the form instance. After validation, 
+        the request against the form instance. After validation,
         this calls a method based upon the name of the button used for
         form submission and whether the validation succeeded or failed.
         If the button was named ``save``, then :meth:`save_success` will be
         called on successful validation or :meth:`save_failure` will
         be called upon failure. An exception to this is when no such
         ``save_failure`` method is present; in this case, the fallback
-        is :meth:`failure``. 
-        
+        is :meth:`failure``.
+
+        This button method call behaviour can be avoided by setting the
+        ``ignore_buttons`` argument to this method to be ``True``. This is
+        particularly useful when needing to return a response (eg a rendered
+        form) from a button ``success`` or ``failure`` method.  Without
+        this option, attempting to re-render the form view from one of these
+        methods will result in infinite recursion as the method calls itself.
+
         Returns a ``dict`` structure suitable for provision tog the given
-        view. By default, this is the page template specified 
+        view. By default, this is the page template specified.
         """
         form = self.prepare_form()
         reqts = form.get_widget_resources()
         result = None
 
-        for button in form.buttons:
-            if button.name in self.request.POST:
-                success_method = getattr(self, '%s_success' % button.name)
-                try:
-                    controls = self.request.POST.items()
-                    validated = form.validate(controls)
-                    result = success_method(validated)
-                except deform.exception.ValidationFailure as e:
-                    fail = getattr(self, '%s_failure' % button.name, None)
-                    if fail is None:
-                        fail = self.failure
-                    result = fail(e)
-                break
+        if not ignore_buttons:
+            for button in form.buttons:
+                if self.request.POST.get(button.name):
+                    success_method = getattr(self, '%s_success' % button.name)
+                    try:
+                        controls = self.request.POST.items()
+                        validated = form.validate(controls)
+                        result = success_method(validated)
+                    except deform.exception.ValidationFailure as e:
+                        fail = getattr(self, '%s_failure' % button.name, None)
+                        if fail is None:
+                            fail = self.failure
+                        result = fail(e)
+                    break
 
         if result is None:
             result = self.show(form)

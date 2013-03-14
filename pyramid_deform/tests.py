@@ -59,6 +59,21 @@ class TestFormView(unittest.TestCase):
         result = inst()
         self.assertEqual(result, response)
 
+    def test__call__ignore_buttons(self):
+        schema = DummySchema()
+        request = DummyRequest()
+        request.POST['submit'] = True
+        inst = self._makeOne(request)
+        inst.schema = schema
+        inst.buttons = (DummyButton('submit'), )
+        inst.submit_success = lambda *x: 'success'
+        inst.form_class = DummyForm
+        result = inst(ignore_buttons=True)
+        #Result should not be success - button handler is ignored
+        self.assertEqual(
+            result,
+            {'css_links': (), 'js_links': (), 'form': 'rendered with None'})
+
     def test___call__button_in_request(self):
         schema = DummySchema()
         request = DummyRequest()
